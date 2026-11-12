@@ -1,18 +1,20 @@
 import streamlit as st
 import yt_dlp
+import requests
+from io import BytesIO
 
-# 웹페이지 제목과 설명
-st.set_page_config(page_title="초강력 영상 다운로더", page_icon="🎬")
-st.title("🎬 초강력 영상 다운로더")
-st.write("인스타그램이나 유튜브 주소를 넣으면 가장 빠르게 저장해 드려요!")
+# 웹페이지 제목 및 설정
+st.set_page_config(page_title="진짜 저장 다운로더", page_icon="🎬")
+st.title("🎬 진짜 저장 다운로더")
+st.write("이제는 링크가 아니라 '진짜 파일'을 보내드립니다!")
 
-# 입력창 만들기
 url = st.text_input("영상 주소(URL)를 입력하세요", placeholder="https://www.instagram.com/reels/...")
 
-if st.button("링크 추출하기"):
+if st.button("영상 다운로드 시작"):
     if url:
-        with st.spinner('분석 중입니다... 잠시만 기다려주세요!'):
+        with st.spinner('서버가 영상을 가져오는 중입니다... 잠시만 기다려주세요!'):
             try:
+                # 1. 영상 주소 추출
                 ydl_opts = {
                     'format': 'best', 
                     'quiet': True,
@@ -21,25 +23,22 @@ if st.button("링크 추출하기"):
                 with yt_dlp.YoutubeDL(ydl_opts) as ydl:
                     info = ydl.extract_info(url, download=False)
                     video_url = info.get('url')
-                
-                st.success("🎉 준비 완료!")
-                
-                # [핵심 수정] 단순 링크가 아니라, 다운로드를 유도하는 버튼 형태로 표시
-                # 실제 구현 시 브라우저 설정에 따라 다운로드 폴더로 바로 들어갑니다.
-                st.markdown(f"""
-                    <a href="{video_url}" download="video.mp4" style="
-                        background-color: #4CAF50; 
-                        color: white; 
-                        padding: 10px 20px; 
-                        text-decoration: none; 
-                        border-radius: 5px; 
-                        font-weight: bold;
-                        display: inline-block;
-                    ">📥 지금 바로 내 기기에 저장하기</a>
-                """, unsafe_allow_html=True)
-                st.balloons() 
+
+                # 2. [핵심] 서버가 직접 영상 데이터를 다운로드함
+                response = requests.get(video_url)
+                video_data = response.content # 영상의 실제 바이트 데이터
+
+                # 3. 스트림릿의 download_button 기능을 사용하여 파일로 전송
+                st.success("🎉 영상 준비 완료! 아래 버튼을 누르면 즉시 저장됩니다.")
+                st.download_button(
+                    label="📥 내 기기에 즉시 저장하기",
+                    data=video_data, 
+                    file_name="instagram_video.mp4", 
+                    mime="video/mp4"
+                )
+                st.balloons()
 
             except Exception as e:
-                st.error(f"❌ 에러가 발생했습니다: {e}")
+                st.error(f"❌ 에러 발생: {e}")
     else:
         st.warning("주소를 입력해 주세요!")
