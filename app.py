@@ -13,8 +13,13 @@ if st.button("링크 추출하기"):
     if url:
         with st.spinner('분석 중입니다... 잠시만 기다려주세요!'):
             try:
-                # yt-dlp 설정
-                ydl_opts = {'format': 'best', 'quiet': True}
+                # [핵심 수정] 인스타그램 서버를 속이기 위한 옵션 추가
+                ydl_opts = {
+                    'format': 'best', 
+                    'quiet': True,
+                    'user_agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36',
+                    'referer': 'https://www.instagram.com/',
+                }
                 with yt_dlp.YoutubeDL(ydl_opts) as ydl:
                     info = ydl.extract_info(url, download=False)
                     video_url = info.get('url')
@@ -25,6 +30,7 @@ if st.button("링크 추출하기"):
                 st.balloons() 
 
             except Exception as e:
+                # 에러 메시지를 더 자세히 보여주도록 수정
                 st.error(f"❌ 에러가 발생했습니다: {e}")
     else:
         st.warning("주소를 입력해 주세요!")
